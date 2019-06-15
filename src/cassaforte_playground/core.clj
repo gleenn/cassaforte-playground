@@ -27,7 +27,7 @@
       session keyspace
       (dsl/with {:replication
                  {"class"              "SimpleStrategy"
-                  "replication_factor" 1}}))
+                  "replication_factor" 3}}))
      (catch Exception e
        (prn (:cause e))))
 
@@ -62,3 +62,11 @@
 
 (prn (cql/select session :users (dsl/where [[= :name "Alex"]])))
 ;(prn (cql/select session :users (dsl/where [[= :city "San Francisco"]]))) ; Predicates on non-primary-key columns (city) are not yet supported for non secondary index queries
+
+
+;; This takes ~250-340ms to insert 10K rows! :D
+#_(time
+ (->> (range 10000)
+      (map #(hash-map :name (str "User" %) :city "San Francisco" :age (int (mod % 100))))
+      (partition-all 1000)
+      (#(doseq [users %] (cql/insert-batch session :users users)))))
