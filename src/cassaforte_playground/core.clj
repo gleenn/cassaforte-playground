@@ -43,6 +43,7 @@
       (dsl/column-definitions {:name        :varchar
                                :age         :int
                                :city        :varchar
+
                                :primary-key [:name]}))
      (catch Exception e
        (prn (:cause e))))
@@ -50,9 +51,14 @@
 
 (cql/insert session
             :users
-            {:name "Alex"
-             :city "Munich"
-             :age  (int 19)})
+            {:name "Alex" :city "Munich" :age (int 19)})
 
-(prn (cql/select session
-                 :users))
+(cql/insert-batch session
+                  :users
+                  [{:name "Glenn" :city "San Francisco" :age (int 13)}
+                   {:name "Kristen" :city "San Francisco" :age (int 12)}])
+
+(prn (cql/select session :users))
+
+(prn (cql/select session :users (dsl/where [[= :name "Alex"]])))
+;(prn (cql/select session :users (dsl/where [[= :city "San Francisco"]]))) ; Predicates on non-primary-key columns (city) are not yet supported for non secondary index queries
